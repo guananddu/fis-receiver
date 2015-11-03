@@ -1,10 +1,10 @@
 {
   "name": "fis3-receiver",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "FIS3 static receiver",
   "main": "server.js",
   "bin": {
-    "fisrcv": "bin/fis3rcv"
+    "fis3rcv": "bin/fis3rcv"
   },
   "dependencies": {
     "formidable": "^1.0.17",
