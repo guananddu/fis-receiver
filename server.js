@@ -4,6 +4,19 @@ var fs = require( 'fs' );
 var path = require( 'path' );
 var mkdirp = require( 'mkdirp' );
 
+var TMP_DIR=function(){
+    var list = ['LOCALAPPDATA', 'APPDATA', 'HOME'];
+    var tmp;
+    for(var i = 0, len = list.length; i < len; i++){
+        if(tmp = process.env[list[i]]){
+            break;
+        }
+    }
+    tmp = tmp || __dirname + '/../';
+    return path.resolve(tmp,'.fis3-receiver-tmp');
+}();
+mkdirp(TMP_DIR);
+
 var server = http.createServer( function( req, res ) {
 
     function error( err ) {
@@ -12,28 +25,12 @@ var server = http.createServer( function( req, res ) {
         } );
         res.end( err.toString() ); //fail
     }
-
-    function next( from, to ) {
-        fs.readFile( from, function( err, content ) {
-            if ( err ) {
-                error( err );
-            } else {
-                fs.writeFile( to, content, function( err ) {
-                    if ( err ) {
-                        error( err );
-                    }
-                    fs.unlink( from, function( err ) {
-                        if ( err ) {
-                            error( err );
-                        }
-                    } );
-                    res.writeHead( 200, {
-                        'Content-Type': 'text/plain'
-                    } );
-                    res.end( '0' ); //success
-                } );
-            }
-        } );
+    function next(from,to){
+        fs.rename(from,to,function (err) {
+            if(err) return error(err);
+            res.writeHead(200, {'content-type': 'text/plain'});
+            res.end('0');
+        });
     }
 
     if ( req.url == '/' ) {
@@ -44,6 +41,7 @@ var server = http.createServer( function( req, res ) {
         res.end( 'I\'m ready for that, you know.' );
     } else if ( req.url == '/receiver' && req.method.toLowerCase() == 'post' ) {
         var form = new formidable.IncomingForm();
+        form.uploadDir=TMP_DIR;
         form.parse( req, function( err, fields, files ) {
             if ( err ) {
                 error( err );
